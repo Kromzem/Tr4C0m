@@ -1,5 +1,7 @@
+mod api;
 mod commands;
 mod types;
+mod util;
 
 use std::env;
 
@@ -14,7 +16,11 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![echo::echo()],
+            commands: vec![
+                echo::echo(),
+                commands::status::status(), //commands::factions::factions(),
+                commands::stats::global_stats(), //commands::register::register(),
+            ],
             ..Default::default()
         })
         .token(env::var("token").expect("missing bot token"))
