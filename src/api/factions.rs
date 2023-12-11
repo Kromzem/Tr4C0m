@@ -1,17 +1,16 @@
-use space_traders::{
-    apis::{
-        factions_api::{self, GetFactionsSuccess},
-        Configuration,
-    },
-    models::{Faction, GetFactions200Response},
-};
+use reqwest::Method;
 
 use crate::types::Error;
 
-pub async fn get_factions(configuration: &Configuration) -> Result<Vec<Faction>, Error> {
-    let answer = factions_api::get_factions(configuration, Some(1), Some(20)).await?;
+use super::models::faction::Faction;
+use super::space_traders::{perform_api_request, ApiRequestData, PagedData};
 
-    let GetFactionsSuccess::Status200(GetFactions200Response { data, meta: _ }) = answer.content;
-
-    Ok(data)
+pub async fn list_factions(limit: usize, page: usize) -> Result<PagedData<Faction>, Error> {
+    perform_api_request(ApiRequestData::new_paged(
+        Method::GET,
+        "factions",
+        limit,
+        page,
+    ))
+    .await
 }

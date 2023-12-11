@@ -1,8 +1,6 @@
+use crate::api::status::get_status;
+use crate::types::{Context, Error};
 use crate::util::content_format::format_field_content;
-use crate::{
-    api::space_traders::get_status,
-    types::{Context, Error},
-};
 
 #[poise::command(slash_command, ephemeral)]
 pub async fn status(ctx: Context<'_>) -> Result<(), Error> {

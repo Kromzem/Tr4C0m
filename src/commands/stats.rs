@@ -1,5 +1,5 @@
 use crate::{
-    api::space_traders::get_status,
+    api::status::get_status,
     types::{Context, Error},
     util::content_format::{format_field_content, format_field_content_lines_owned},
 };
