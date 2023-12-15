@@ -1,4 +1,4 @@
-use serde::{de::value::StringDeserializer, Deserialize};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Agent {

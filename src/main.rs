@@ -5,7 +5,6 @@ mod util;
 
 use std::env;
 
-use commands::echo;
 use dotenv::dotenv;
 use poise::{builtins, serenity_prelude::GuildId};
 use types::Data;
@@ -17,9 +16,10 @@ async fn main() {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
-                echo::echo(),
                 commands::status::status(), //commands::factions::factions(),
-                commands::stats::global_stats(), //commands::register::register(),
+                commands::stats::global_stats(),
+                commands::register::register(),
+                commands::login::login(),
             ],
             ..Default::default()
         })
@@ -33,7 +33,7 @@ async fn main() {
                     read_dev_guild_id(),
                 )
                 .await?;
-                Ok(Data {})
+                Ok(Data::new())
             })
         });
 

@@ -1,15 +1,13 @@
+use super::space_traders::{perform_api_request, ApiRequestData};
+use anyhow::Result;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
-
-use crate::types::Error;
-
-use super::space_traders::{perform_api_request, ApiRequestData};
 
 pub async fn register(
     name: &str,
     faction_symbol: &str,
     email: Option<&str>,
-) -> Result<RegistrationResponseData, Error> {
+) -> Result<RegistrationResponseData> {
     perform_api_request::<RegistrationResponse>(ApiRequestData::new_content(
         Method::POST,
         "register",

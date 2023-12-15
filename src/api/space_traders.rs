@@ -1,23 +1,43 @@
+use core::panic;
 use std::collections::HashMap;
 
-use reqwest::{Client, Method, RequestBuilder};
+use reqwest::{header::AUTHORIZATION, Client, Method, RequestBuilder, StatusCode};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::types::Error;
+use anyhow::Result;
+
+// use crate::types::Error;
 
 const BASE_URL: &'static str = "https://api.spacetraders.io/v2";
 
-pub async fn perform_api_request<T>(request_data: ApiRequestData) -> Result<T, Error>
+pub async fn perform_api_request<T>(request_data: ApiRequestData) -> Result<T>
 where
     T: DeserializeOwned,
 {
     let client = Client::new();
 
-    Ok(build_request(&client, request_data)
-        .send()
-        .await?
-        .json::<T>()
-        .await?)
+    let request = build_request(&client, request_data);
+
+    let response = request.send().await?;
+    // match response.status() {
+    //     StatusCode::OK => {
+    //         return Ok(response.json::<T>().await?);
+    //     }
+    //     other => {
+    //         println!("Error: {}", response.text().await?);
+    //         panic!("Unhandled http status {:?}", other);
+    //     }
+    // }
+
+    let status = response.status().as_u16();
+
+    let text = response.text().await?;
+    println!("Status: {}", status);
+    println!("Answer: {}", &text);
+
+    Ok(serde_json::from_str(&text)?)
+
+    // Ok(request.send().await?.json::<T>().await?)
 }
 
 fn build_request(client: &Client, request_data: ApiRequestData) -> RequestBuilder {
@@ -70,6 +90,16 @@ impl ApiRequestData {
             additional_configs: vec![Box::new(JsonContentApiConfig::<T> { content })],
         }
     }
+
+    pub fn new_authorized(method: Method, endpoint: &str, token: &str) -> ApiRequestData {
+        ApiRequestData {
+            endpoint: endpoint.to_string(),
+            method,
+            additional_configs: vec![Box::new(AuthorizationApiConfig {
+                token: token.to_string(),
+            })],
+        }
+    }
 }
 
 pub trait ApiAdditionalConfig {
@@ -96,8 +126,24 @@ impl ApiAdditionalConfig for QueryParameterApiConfig {
     }
 }
 
+struct AuthorizationApiConfig {
+    token: String,
+}
+
+impl ApiAdditionalConfig for AuthorizationApiConfig {
+    fn apply_config(&self, request: RequestBuilder) -> RequestBuilder {
+        request.bearer_auth(&self.token)
+        // request.header(AUTHORIZATION, format!("Bearer {}", self.token))
+    }
+}
+
 #[derive(Deserialize)]
-pub struct PagedData<T> {
+pub struct ApiData<T> {
+    pub data: T,
+}
+
+#[derive(Deserialize)]
+pub struct PagedApiData<T> {
     pub data: Vec<T>,
     pub meta: PageMetaData,
 }

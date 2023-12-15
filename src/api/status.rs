@@ -1,11 +1,10 @@
 use reqwest::Method;
 use serde::Deserialize;
 
-use crate::types::Error;
-
 use super::space_traders::{perform_api_request, ApiRequestData};
+use anyhow::Result;
 
-pub async fn get_status() -> Result<Status, Error> {
+pub async fn get_status() -> Result<Status> {
     perform_api_request(ApiRequestData::new(Method::GET, "")).await
 }
 

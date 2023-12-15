@@ -1,9 +1,10 @@
 use crate::api::status::get_status;
-use crate::types::{Context, Error};
+use crate::types::ApplicationContext;
 use crate::util::content_format::format_field_content;
+use anyhow::Result;
 
 #[poise::command(slash_command, ephemeral)]
-pub async fn status(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn status(ctx: ApplicationContext<'_>) -> Result<()> {
     let status = get_status().await?;
 
     ctx.send(|m| {

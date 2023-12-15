@@ -1,11 +1,12 @@
 use crate::{
     api::status::get_status,
-    types::{Context, Error},
+    types::Context,
     util::content_format::{format_field_content, format_field_content_lines_owned},
 };
+use anyhow::Result;
 
 #[poise::command(slash_command, ephemeral)]
-pub async fn global_stats(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn global_stats(ctx: Context<'_>) -> Result<()> {
     let status = get_status().await?;
 
     let global_stats_lines = [

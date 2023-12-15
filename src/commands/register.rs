@@ -3,13 +3,15 @@ use std::time::Duration;
 use crate::api::factions::list_factions;
 use crate::api::models::faction::Faction;
 use crate::api::register;
-use crate::types::{Context, Error};
-use poise::execute_modal_on_component_interaction;
+use crate::types::Context;
 use poise::serenity_prelude::{CollectComponentInteraction, CreateSelectMenuOption};
+use poise::{execute_modal, execute_modal_on_component_interaction};
 use poise::{serenity_prelude::ButtonStyle, ReplyHandle};
 
+use anyhow::{Error, Result};
+
 #[poise::command(slash_command, ephemeral)]
-pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn register(ctx: Context<'_>) -> Result<()> {
     ctx.defer_ephemeral().await?;
 
     let reply = ctx
@@ -29,7 +31,7 @@ pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-async fn select_faction(ctx: Context<'_>, reply: &ReplyHandle<'_>) -> Result<String, Error> {
+async fn select_faction(ctx: Context<'_>, reply: &ReplyHandle<'_>) -> Result<String> {
     let factions = list_factions(20, 1).await?.data;
 
     reply
@@ -60,7 +62,7 @@ async fn select_faction(ctx: Context<'_>, reply: &ReplyHandle<'_>) -> Result<Str
         .timeout(Duration::from_secs(120))
         .filter(move |mci| mci.data.custom_id == "faction")
         .await
-        .ok_or(Error::from("Timeout".to_string()))?;
+        .ok_or(Error::msg("Timeout".to_string()))?;
     interaction.defer(ctx).await?;
 
     Ok(interaction.data.values[0].to_string())
@@ -69,7 +71,7 @@ async fn select_faction(ctx: Context<'_>, reply: &ReplyHandle<'_>) -> Result<Str
 async fn select_callsign(
     ctx: Context<'_>,
     reply: &ReplyHandle<'_>,
-) -> Result<(String, Option<String>), Error> {
+) -> Result<(String, Option<String>)> {
     reply
         .edit(ctx, |m| {
             m.embed(|e| e.description("Enter your player name:"))
@@ -89,7 +91,7 @@ async fn select_callsign(
         .timeout(Duration::from_secs(120))
         .filter(move |mci| mci.data.custom_id == "name")
         .await
-        .ok_or(Error::from("Timeout".to_string()))?;
+        .ok_or(Error::msg("Timeout".to_string()))?;
 
     let modal = execute_modal_on_component_interaction::<NameModal>(
         ctx,
@@ -98,7 +100,7 @@ async fn select_callsign(
         Some(Duration::from_secs(360)),
     )
     .await?
-    .ok_or(Error::from("No name received!".to_string()))?;
+    .ok_or(Error::msg("No name received!".to_string()))?;
 
     Ok((modal.name, modal.email))
 }
@@ -107,7 +109,7 @@ async fn perform_registration(
     faction_symbol: &str,
     name: &str,
     email: Option<&str>,
-) -> Result<String, Error> {
+) -> Result<String> {
     Ok(register::register(name, faction_symbol, email).await?.token)
 }
 
