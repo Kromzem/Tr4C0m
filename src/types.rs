@@ -28,4 +28,10 @@ impl Data {
 
         tokens.get(&user_id).map(|x| x.to_string())
     }
+
+    pub fn delete_user_token(&self, user_id: u64) {
+        let mut tokens = self.tokens.lock().expect("Acquire api token lock");
+
+        tokens.remove(&user_id);
+    }
 }

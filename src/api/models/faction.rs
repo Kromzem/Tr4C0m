@@ -17,3 +17,8 @@ pub struct FactionTrait {
     pub name: String,
     pub description: String,
 }
+
+#[derive(Deserialize)]
+pub struct FactionSymbol {
+    pub symbol: String,
+}

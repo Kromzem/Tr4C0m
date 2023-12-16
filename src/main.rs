@@ -20,6 +20,9 @@ async fn main() {
                 commands::stats::global_stats(),
                 commands::register::register(),
                 commands::login::login(),
+                commands::logout::logout(),
+                commands::me::me(),
+                commands::show_headquarters_waypoint::show_headquarter_waypoint(),
             ],
             ..Default::default()
         })
