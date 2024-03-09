@@ -7,13 +7,7 @@ use super::{
 };
 
 pub async fn list(limit: usize, page: usize) -> Result<PagedApiData<System>> {
-    perform_api_request(ApiRequestData::new_paged(
-        Method::GET,
-        "systems",
-        limit,
-        page,
-    ))
-    .await
+    perform_api_request(ApiRequestData::new(Method::GET, "systems").paged(limit, page)).await
 }
 
 pub async fn get(symbol: &str) -> Result<ApiData<System>> {
@@ -29,12 +23,10 @@ pub async fn list_waypoints(
     limit: usize,
     page: usize,
 ) -> Result<PagedApiData<Waypoint>> {
-    perform_api_request(ApiRequestData::new_paged(
-        Method::GET,
-        &format!("systems/{}/waypoints", system_symbol),
-        limit,
-        page,
-    ))
+    perform_api_request(
+        ApiRequestData::new(Method::GET, &format!("systems/{}/waypoints", system_symbol))
+            .paged(limit, page),
+    )
     .await
 }
 

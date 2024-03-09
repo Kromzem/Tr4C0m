@@ -2,10 +2,9 @@ use std::{collections::HashMap, sync::Mutex};
 
 use anyhow::Error;
 
-// pub type Error = Box<dyn std::error::Error + Send + Sync>;
-pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub type ApplicationContext<'a> = poise::ApplicationContext<'a, Data, Error>;
+pub type DiscordContext = serenity::prelude::Context;
 
+// pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub struct Data {
     tokens: Mutex<HashMap<u64, String>>,
 }

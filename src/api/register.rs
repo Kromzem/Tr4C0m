@@ -8,18 +8,16 @@ pub async fn register(
     faction_symbol: &str,
     email: Option<&str>,
 ) -> Result<RegistrationResponseData> {
-    perform_api_request::<RegistrationResponse>(ApiRequestData::new_content(
-        Method::POST,
-        "register",
-        RegistrationRequest {
+    perform_api_request::<RegistrationResponse>(
+        ApiRequestData::new(Method::POST, "register").content(RegistrationRequest {
             faction: faction_symbol.to_owned(),
             symbol: name.to_owned(),
             email: match email {
                 Some(email) => Some(email.to_owned()),
                 None => None,
             },
-        },
-    ))
+        }),
+    )
     .await
     .map(|r| r.data)
 }

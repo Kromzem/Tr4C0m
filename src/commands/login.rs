@@ -5,7 +5,8 @@ use crate::{
     types::{ApplicationContext, Data},
 };
 use anyhow::{Error, Result};
-use poise::{execute_modal, Modal};
+use poise::{execute_modal, serenity_prelude::ComponentInteractionCollector, Modal};
+use serenity::builder::CreateCommand;
 
 #[poise::command(slash_command, ephemeral)]
 pub async fn login(ctx: ApplicationContext<'_>) -> Result<()> {
@@ -41,4 +42,8 @@ struct TokenModal {
     #[placeholder = "Your token"]
     #[name = "Token"]
     token: String,
+}
+
+pub fn register() -> CreateCommand {
+    CreateCommand::new("login").description("Perform login")
 }

@@ -7,10 +7,5 @@ use super::{
 use anyhow::Result;
 
 pub async fn get_agent(token: &str) -> Result<ApiData<Agent>> {
-    perform_api_request(ApiRequestData::new_authorized(
-        Method::GET,
-        "my/agent",
-        token,
-    ))
-    .await
+    perform_api_request(ApiRequestData::new(Method::GET, "my/agent").authorization(token)).await
 }

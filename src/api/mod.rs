@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod contracts;
 pub mod factions;
 pub mod models;
 pub mod register;

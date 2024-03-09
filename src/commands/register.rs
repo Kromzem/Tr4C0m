@@ -3,23 +3,21 @@ use std::time::Duration;
 use crate::api::factions::list_factions;
 use crate::api::models::faction::Faction;
 use crate::api::register;
-use crate::types::Context;
-use poise::serenity_prelude::{CollectComponentInteraction, CreateSelectMenuOption};
-use poise::{execute_modal, execute_modal_on_component_interaction};
-use poise::{serenity_prelude::ButtonStyle, ReplyHandle};
+use crate::types::{ApplicationContext, Context};
+use crate::views::view::{UuidButtonCreate, View, ViewBuilder};
 
 use anyhow::{Error, Result};
+use serenity::builder::CreateCommand;
 
 #[poise::command(slash_command, ephemeral)]
-pub async fn register(ctx: Context<'_>) -> Result<()> {
+pub async fn perform(ctx: ApplicationContext<'_>) -> Result<()> {
     ctx.defer_ephemeral().await?;
 
-    let reply = ctx
-        .send(|m| {
-            m.ephemeral(true)
-                .embed(|e| e.description("Welcome :)\nPlease wait ..."))
-        })
-        .await?;
+    let mut view = View::new(ctx);
+
+    view.display(welcome_view()).await?;
+
+    let reply = ctx.send(welcome_view()).await?;
 
     let faction_symbol = select_faction(ctx, &reply).await?;
     let login_creds = select_callsign(ctx, &reply).await?;
@@ -30,6 +28,18 @@ pub async fn register(ctx: Context<'_>) -> Result<()> {
 
     Ok(())
 }
+
+async fn choose_name_view(view: &mut View) {
+    let embed = CreateEmbed::new()
+        .description("Welcome to SpaceTraders :)\nHow dou you want to be called?");
+
+    let mut buttons = Vec::with_capacity(1);
+    buttons.push((CreateButton::with_uuid(), test));
+
+    let mut builder = ViewBuilder::new(embed).add_buttons_row(buttons);
+}
+
+fn test() {}
 
 async fn select_faction(ctx: Context<'_>, reply: &ReplyHandle<'_>) -> Result<String> {
     let factions = list_factions(20, 1).await?.data;
@@ -142,4 +152,8 @@ struct NameModal {
     #[placeholder = "space@trader.com"]
     #[name = "E-Mail"]
     email: Option<String>,
+}
+
+pub fn register() -> CreateCommand {
+    CreateCommand::new("register")
 }

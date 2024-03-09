@@ -67,38 +67,32 @@ impl ApiRequestData {
         }
     }
 
-    pub fn new_paged(method: Method, endpoint: &str, limit: usize, page: usize) -> ApiRequestData {
-        ApiRequestData {
-            endpoint: endpoint.to_owned(),
-            method,
-            additional_configs: vec![Box::new(QueryParameterApiConfig {
+    pub fn content<T: Serialize + Send + 'static>(mut self, content: T) -> ApiRequestData {
+        self.additional_configs
+            .push(Box::new(JsonContentApiConfig::<T> { content }));
+
+        self
+    }
+
+    pub fn authorization(mut self, token: &str) -> ApiRequestData {
+        self.additional_configs
+            .push(Box::new(AuthorizationApiConfig {
+                token: token.to_string(),
+            }));
+
+        self
+    }
+
+    pub fn paged(mut self, limit: usize, page: usize) -> ApiRequestData {
+        self.additional_configs
+            .push(Box::new(QueryParameterApiConfig {
                 parameters: HashMap::from([
                     ("limit".to_owned(), limit.to_string()),
                     ("page".to_owned(), page.to_string()),
                 ]),
-            })],
-        }
-    }
+            }));
 
-    pub fn new_content<T: Serialize>(method: Method, endpoint: &str, content: T) -> ApiRequestData
-    where
-        T: Send + 'static,
-    {
-        ApiRequestData {
-            endpoint: endpoint.to_owned(),
-            method,
-            additional_configs: vec![Box::new(JsonContentApiConfig::<T> { content })],
-        }
-    }
-
-    pub fn new_authorized(method: Method, endpoint: &str, token: &str) -> ApiRequestData {
-        ApiRequestData {
-            endpoint: endpoint.to_string(),
-            method,
-            additional_configs: vec![Box::new(AuthorizationApiConfig {
-                token: token.to_string(),
-            })],
-        }
+        self
     }
 }
 
@@ -133,7 +127,6 @@ struct AuthorizationApiConfig {
 impl ApiAdditionalConfig for AuthorizationApiConfig {
     fn apply_config(&self, request: RequestBuilder) -> RequestBuilder {
         request.bearer_auth(&self.token)
-        // request.header(AUTHORIZATION, format!("Bearer {}", self.token))
     }
 }
 
