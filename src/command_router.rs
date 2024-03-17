@@ -20,7 +20,7 @@ pub async fn register_commands(ctx: DiscordContext) -> Result<()> {
     Ok(())
 }
 
-pub async fn handle_command(ctx: DiscordContext, command: CommandInteraction) -> Result<()> {
+pub async fn handle_command(ctx: &DiscordContext, command: CommandInteraction) -> Result<()> {
     command.defer_ephemeral(&ctx.http).await?;
 
     if let Err(error) = perform_command(&ctx, &command).await {
@@ -38,7 +38,7 @@ pub async fn handle_command(ctx: DiscordContext, command: CommandInteraction) ->
 async fn perform_command(ctx: &DiscordContext, command: &CommandInteraction) -> Result<()> {
     match command.data.name.as_str() {
         ping::IDENTIFIER => ping::handle(&ctx, &command.token).await,
-        play::IDENTIFIER => play::handle(&ctx, &command.token).await,
+        play::IDENTIFIER => play::handle(&ctx, command.user.id.get(), &command.token).await,
         _ => bail!("Unknown command '{}'!", &command.data.name),
     }
 }

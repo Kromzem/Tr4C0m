@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Error, Result};
 use serenity::{all::Message, builder::EditInteractionResponse, prelude::Context};
 
 use crate::{state::get_view_token, types::DiscordContext};
@@ -37,4 +37,34 @@ pub async fn show_message_for_user(
     };
 
     show_message(ctx, message, &token).await
+}
+
+pub async fn show_interaction_result(
+    ctx: &DiscordContext,
+    interaction_token: &str,
+    result: Result<()>,
+) -> Result<()> {
+    if let Err(error) = result {
+        let message = EditInteractionResponse::new().content(format!(
+            "```diff\n- {}\n```",
+            error.to_string().replace("\n", "- \n")
+        ));
+
+        return show_message(ctx, &message, interaction_token).await;
+    }
+
+    Ok(())
+}
+
+pub async fn show_interaction_error(
+    ctx: &DiscordContext,
+    interaction_token: &str,
+    error: Error,
+) -> Result<()> {
+    let message = EditInteractionResponse::new().content(format!(
+        "```diff\n- {}\n```",
+        error.to_string().replace("\n", "- \n")
+    ));
+
+    return show_message(ctx, &message, interaction_token).await;
 }

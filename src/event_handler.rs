@@ -51,15 +51,24 @@ impl Handler {
 #[async_trait]
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: DiscordContext, interaction: Interaction) {
+        let token = interaction.token().to_string();
+
         let result = match interaction {
-            Interaction::Command(command) => command_router::handle_command(ctx, command).await,
-            Interaction::Component(component) => self.handle_component(component, ctx).await,
-            Interaction::Modal(modal) => self.handle_modal(modal, ctx).await,
+            Interaction::Command(command) => command_router::handle_command(&ctx, command).await,
+            Interaction::Component(component) => self.handle_component(component, &ctx).await,
+            Interaction::Modal(modal) => self.handle_modal(modal, &ctx).await,
             _ => Ok(()),
         };
 
         if let Result::Err(err) = result {
             println!("{:?}", err);
+
+            let message = EditInteractionResponse::new().content(format!(
+                "```diff\n- {}\n```",
+                err.to_string().replace("\n", "- \n")
+            ));
+
+            show_message(&ctx, &message, &token).await;
         }
     }
 
@@ -119,12 +128,12 @@ impl Handler {
     async fn handle_component(
         &self,
         component: ComponentInteraction,
-        ctx: DiscordContext,
+        ctx: &DiscordContext,
     ) -> Result<()> {
         todo!()
     }
 
-    async fn handle_modal(&self, modal: ModalInteraction, ctx: DiscordContext) -> Result<()> {
+    async fn handle_modal(&self, modal: ModalInteraction, ctx: &DiscordContext) -> Result<()> {
         todo!()
     }
 }

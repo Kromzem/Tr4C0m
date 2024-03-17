@@ -19,7 +19,7 @@ pub fn save_view_token(user_id: u64, token: &str) {
         view_token: None,
     });
 
-    entry.space_traders_token = Some(token.to_string());
+    entry.view_token = Some(token.to_string());
 
     // *entry.view_token = token;
 }

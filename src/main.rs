@@ -3,6 +3,7 @@ mod commands;
 mod event_handler;
 // mod fragment;
 mod command_router;
+mod interaction_router;
 mod state;
 mod types;
 mod util;
