@@ -1,4 +1,4 @@
-use anyhow::{bail, Error, Result};
+use anyhow::{bail, Result};
 use serenity::{all::Message, builder::EditInteractionResponse, prelude::Context};
 
 use crate::{state::get_view_token, types::DiscordContext};
