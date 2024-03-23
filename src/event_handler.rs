@@ -21,7 +21,8 @@ use crate::{
     command_router,
     // commands::{self, handler::CommandHandler, ping::PingCommandHandler, play::PlayCommandHandler},
     types::DiscordContext,
-    util::util::show_message,
+    util::util::{show_interaction_error, show_message},
+    views::view::{handle_view_interaction, View},
 };
 
 // type CommandLogic = dyn Fn(DiscordContext) -> Result<()>;
@@ -53,23 +54,38 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: DiscordContext, interaction: Interaction) {
         let token = interaction.token().to_string();
 
-        let result = match interaction {
-            Interaction::Command(command) => command_router::handle_command(&ctx, command).await,
-            Interaction::Component(component) => self.handle_component(component, &ctx).await,
-            Interaction::Modal(modal) => self.handle_modal(modal, &ctx).await,
-            _ => Ok(()),
-        };
+        if let Interaction::Command(command) = interaction {
+            let result = command_router::handle_command(&ctx, command).await;
 
-        if let Result::Err(err) = result {
-            println!("{:?}", err);
+            if let Err(error) = result {
+                println!("{:?}", error);
 
-            let message = EditInteractionResponse::new().content(format!(
-                "```diff\n- {}\n```",
-                err.to_string().replace("\n", "- \n")
-            ));
+                let _ = show_interaction_error(&ctx, &token, &error).await;
+            }
 
-            show_message(&ctx, &message, &token).await;
+            return;
         }
+
+        let result = handle_view_interaction(&ctx, interaction).await;
+        if let Err(error) = result {
+            println!("{:?}", error);
+        }
+
+        // let result = match interaction {
+        //     Interaction::Command(command) => command_router::handle_command(&ctx, command).await,
+        //     _ => handle_view_interaction(&ctx, interaction).await,
+        // };
+
+        // if let Result::Err(err) = result {
+        //     println!("{:?}", err);
+
+        //     let message = EditInteractionResponse::new().content(format!(
+        //         "```diff\n- {}\n```",
+        //         err.to_string().replace("\n", "- \n")
+        //     ));
+
+        //     show_message(&ctx, &message, &token).await;
+        // }
     }
 
     async fn ready(&self, ctx: DiscordContext, ready: Ready) {

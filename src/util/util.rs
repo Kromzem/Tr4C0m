@@ -1,5 +1,11 @@
-use anyhow::{bail, Result};
-use serenity::{all::Message, builder::EditInteractionResponse, prelude::Context};
+use std::collections::HashMap;
+
+use anyhow::{bail, Error, Result};
+use serenity::{
+    all::{ActionRowComponent, Message, ModalInteractionData},
+    builder::{CreateActionRow, CreateInputText, CreateModal, EditInteractionResponse},
+    prelude::Context,
+};
 
 use crate::{state::get_view_token, types::DiscordContext};
 
@@ -59,7 +65,7 @@ pub async fn show_interaction_result(
 pub async fn show_interaction_error(
     ctx: &DiscordContext,
     interaction_token: &str,
-    error: Error,
+    error: &Error,
 ) -> Result<()> {
     let message = EditInteractionResponse::new().content(format!(
         "```diff\n- {}\n```",
@@ -67,4 +73,13 @@ pub async fn show_interaction_error(
     ));
 
     return show_message(ctx, &message, interaction_token).await;
+}
+
+pub fn create_modal(custom_id: &str, title: &str, inputs: Vec<CreateInputText>) -> CreateModal {
+    CreateModal::new(custom_id, title).components(
+        inputs
+            .into_iter()
+            .map(|i| CreateActionRow::InputText(i))
+            .collect(),
+    )
 }

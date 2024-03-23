@@ -1,14 +1,19 @@
+use std::sync::Arc;
+
 use crate::{
-    state::{get_view_token, save_view_token},
+    state::{
+        get_current_view, get_space_traders_token, get_view_token, push_view, save_view_token,
+    },
     types::DiscordContext,
     util::util::show_message,
-    views::{authenticate::AuthenticationViewController, view::View},
+    views::{authenticate::AuthenticationViewController, hub::HubViewController, view::View},
 };
 use anyhow::{bail, Result};
 use serenity::{
     async_trait,
     builder::{CreateCommand, CreateEmbed, EditInteractionResponse},
 };
+use tokio::sync::RwLock;
 
 use super::handler::CommandHandler;
 
@@ -41,10 +46,29 @@ pub async fn handle(ctx: &DiscordContext, user_id: u64, interaction_token: &str)
 
     save_view_token(user_id, interaction_token);
 
-    let view = View::Authentication(AuthenticationViewController::new(user_id));
-    view.show(ctx).await?;
+    {
+        let view = get_view(user_id);
+        let lock = view.read().await;
+        lock.show(ctx, user_id).await;
+    }
 
     Ok(())
+}
+
+fn get_view(user_id: u64) -> Arc<RwLock<View>> {
+    let access_token = get_space_traders_token(user_id);
+    if let Ok(_) = access_token {
+        if let Ok(view) = get_current_view(user_id) {
+            return view;
+        }
+
+        return push_view(user_id, View::Hub(HubViewController::new()));
+    }
+
+    return push_view(
+        user_id,
+        View::Authentication(AuthenticationViewController::new(user_id)),
+    );
 }
 
 // pub struct PlayCommandHandler;
