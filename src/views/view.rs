@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Error, Result};
 use serenity::{
     all::{
         ButtonKind, Command, ComponentInteraction, ComponentInteractionDataKind, Interaction,
         InteractionCreateEvent, InteractionType, ModalInteraction,
     },
+    builder::{CreateEmbed, EditInteractionResponse},
     futures::TryFutureExt,
+    model::Color,
 };
 
 use crate::{
@@ -60,13 +62,34 @@ impl View {
     }
 
     pub async fn show(&self, ctx: &DiscordContext, user_id: u64) -> Result<()> {
+        let view = self.get_view(user_id).await?;
+
+        show_message_for_user(ctx, &view, user_id).await
+    }
+
+    pub async fn show_with_error(
+        &self,
+        ctx: &DiscordContext,
+        user_id: u64,
+        error: &Error,
+    ) -> Result<()> {
+        let view = self.get_view(user_id).await?.add_embed(
+            CreateEmbed::new()
+                .description(error.to_string())
+                .color(Color::from_rgb(0xff, 0x00, 0x00)),
+        );
+
+        show_message_for_user(ctx, &view, user_id).await
+    }
+
+    async fn get_view(&self, user_id: u64) -> Result<EditInteractionResponse> {
         let view = match self {
             View::Authentication(controller) => controller.get_view(),
             View::Hub(controller) => controller.get_view(user_id).await?,
             _ => bail!("View can't be shown!"),
         };
 
-        show_message_for_user(ctx, &view, user_id).await
+        Ok(view)
     }
 }
 
@@ -84,9 +107,14 @@ pub async fn handle_view_interaction(ctx: &DiscordContext, interaction: Interact
     };
 
     if let Err(error) = result {
-        let token = get_view_token(user_id);
-        if let Some(token) = token {
-            let _ = show_interaction_error(ctx, &token, &error).await;
+        let view = get_current_view(user_id);
+        if let Ok(view) = view {
+            let _ = view
+                .read()
+                .await
+                .show_with_error(ctx, user_id, &error)
+                .await;
+            // let _ = show_interaction_error(ctx, &token, &error).await;        }
         }
 
         return Err(error);
